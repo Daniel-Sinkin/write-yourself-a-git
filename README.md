@@ -3,8 +3,8 @@ This repo will contain my implementation of the core git functionalities as outl
 
 # TODOs
 * ✅ init
-* ✅ hash-object
 * ✅ cat-file
+* ✅ hash-object
 * ❌ add
 * ❌ check-ignore
 * ❌ checkout

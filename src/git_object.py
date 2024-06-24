@@ -4,10 +4,12 @@ import hashlib
 import os
 import zlib
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from .constants import BYTE_CHARS
-from .git_repository import GitRepository
+
+if TYPE_CHECKING:
+    from .git_repository import GitRepository
 
 
 class GitObject(ABC):
@@ -52,22 +54,8 @@ class GitObject(ABC):
             if size != len(raw) - header_end - 1:
                 raise Exception(f"Malformed object {sha}: bad length")
 
-            match file_format:
-                case b"commit":
-                    object_type = GitCommit
-                case b"tree":
-                    object_type = GitTree
-                case b"tag":
-                    object_type = GitTag
-                case b"blob":
-                    object_type = GitBlob
-                case _:
-                    raise Exception(
-                        f"Malformed object {sha}: Unknown type {file_format.decode('ascii')}"
-                    )
-
             contents = raw[header_end + 1 :]
-            return object_type(contents)
+            return fmt_to_class_map[file_format](contents)
 
     def write(object: GitObject, repo: Optional[GitRepository] = None) -> str:
         data: bytes = object.serialize()
@@ -107,3 +95,56 @@ class GitBlob(GitObject):
 
     def deserialize(self, data: Optional[str]):
         self._blobdata: Optional[str] = data
+
+
+class GitTree(GitObject):
+    def __str__(self):
+        return super().__str__().replace("GitObject", "GitTree")
+
+    @property
+    def format(self) -> bytes:
+        return b"tree"
+
+    def serialize(self) -> Optional[bytes]:
+        return self._blobdata
+
+    def deserialize(self, data: Optional[str]):
+        self._blobdata: Optional[str] = data
+
+
+class GitCommit(GitObject):
+    def __str__(self):
+        return super().__str__().replace("GitObject", "GitCommit")
+
+    @property
+    def format(self) -> bytes:
+        return b"commit"
+
+    def serialize(self) -> Optional[bytes]:
+        return self._blobdata
+
+    def deserialize(self, data: Optional[str]):
+        self._blobdata: Optional[str] = data
+
+
+class GitTag(GitObject):
+    def __str__(self):
+        return super().__str__().replace("GitObject", "GitTag")
+
+    @property
+    def format(self) -> bytes:
+        return b"tag"
+
+    def serialize(self) -> Optional[bytes]:
+        return self._blobdata
+
+    def deserialize(self, data: Optional[str]):
+        self._blobdata: Optional[str] = data
+
+
+fmt_to_class_map: dict[bytes, GitObject] = {
+    b"commit": GitCommit,
+    b"tree": GitTree,
+    b"tag": GitTag,
+    b"blob": GitBlob,
+}

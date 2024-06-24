@@ -1,7 +1,11 @@
 import argparse
+from io import BufferedReader
 from typing import Callable, Optional, TypeAlias, cast
 
+from .git_object import GitObject, fmt_to_class_map
 from .git_repository import GitRepository
+
+COMMAND: TypeAlias = Callable[[argparse.Namespace], None]
 
 
 def cmd_init(args: argparse.Namespace) -> None:
@@ -9,13 +13,22 @@ def cmd_init(args: argparse.Namespace) -> None:
 
 
 def cmd_cat_file(args: argparse.Namespace) -> None:
-    repo = GitRepository.find()
+    repo: open[GitRepository] = GitRepository.find()
     type_ = str(args.type)
     obj_str = str(args.object)
     repo.cat_file(obj_str, fmt=type_.encode())
 
 
-COMMAND: TypeAlias = Callable[[argparse.Namespace], None]
+def object_hash(data: bytes, fmt: bytes, repo: Optional[GitRepository] = None):
+    GitObject.write(fmt_to_class_map[fmt], repo)
+
+
+def cmd_hash_object(args: argparse.Namespace) -> None:
+    repo = GitRepository.find() if args.write else None
+
+    with open(args.path, "rb") as file_data:
+        sha = object_hash(file_data.read(), args.type.encode(), repo)
+        print(sha)
 
 
 def get_cmd(key: Optional[str] = None) -> dict[str, COMMAND] | COMMAND:
