@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from .git_object import GitObject
+from .git_object import GitCommit, GitObject
 
 
 class GitRepository:
@@ -123,5 +123,36 @@ class GitRepository:
 
     def find_object(
         self, name: str, fmt: Optional[bytes] = None, follow: bool = True
-    ) -> None:
+    ) -> str:
         return name
+
+    def log_graphviz(self, sha: str, seen: list[str]) -> None:
+        if sha in seen:
+            return
+
+        seen.add(sha)
+        commit = GitObject.read(self, sha)
+        assert commit is None or isinstance(commit, GitCommit)
+        assert commit.format == b"commit"
+
+        short_hash = sha[0:8]
+        message = commit.kvlm[None].decode("utf8").strip()
+        message = message.replace("\\", "\\\\")
+        message = message.replace('"', '\\"')
+
+        if "\n" in message:
+            message = message[: message.index("\n")]
+
+        print(f'  c_{sha} [label="{sha[0:7]}: {message}"]')
+        if b"parent" not in commit.kvlm.keys():
+            return
+
+        parents = commit.kvlm[b"parent"]
+
+        if not isinstance(parents, list):
+            parents = [parents]
+
+        for p in parents:
+            p = str(p.decode("ascii"))
+            print(f"  c_{sha} -> c_{p};")
+            self.log_graphviz(p, seen)

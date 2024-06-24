@@ -4,9 +4,11 @@ import hashlib
 import os
 import zlib
 from abc import ABC, abstractmethod
+from collections import OrderedDict
 from typing import TYPE_CHECKING, Optional
 
 from .constants import BYTE_CHARS
+from .util import kvlm_parse, kvlm_serialize
 
 if TYPE_CHECKING:
     from .git_repository import GitRepository
@@ -93,8 +95,8 @@ class GitBlob(GitObject):
     def serialize(self) -> Optional[bytes]:
         return self._blobdata
 
-    def deserialize(self, data: Optional[str]):
-        self._blobdata: Optional[str] = data
+    def deserialize(self, data: Optional[bytes]):
+        self._blobdata: Optional[bytes] = data
 
 
 class GitTree(GitObject):
@@ -108,8 +110,8 @@ class GitTree(GitObject):
     def serialize(self) -> Optional[bytes]:
         return self._blobdata
 
-    def deserialize(self, data: Optional[str]):
-        self._blobdata: Optional[str] = data
+    def deserialize(self, data: Optional[bytes]):
+        self._blobdata: Optional[bytes] = data
 
 
 class GitCommit(GitObject):
@@ -121,10 +123,13 @@ class GitCommit(GitObject):
         return b"commit"
 
     def serialize(self) -> Optional[bytes]:
-        return self._blobdata
+        return kvlm_serialize(self.kvlm)
 
-    def deserialize(self, data: Optional[str]):
-        self._blobdata: Optional[str] = data
+    def deserialize(self, data: Optional[bytes]):
+        self.kvlm: Optional[OrderedDict] = kvlm_parse(data)
+
+    def init(self):
+        self.kvlm = {}
 
 
 class GitTag(GitObject):
@@ -138,7 +143,7 @@ class GitTag(GitObject):
     def serialize(self) -> Optional[bytes]:
         return self._blobdata
 
-    def deserialize(self, data: Optional[str]):
+    def deserialize(self, data: Optional[bytes]):
         self._blobdata: Optional[str] = data
 
 

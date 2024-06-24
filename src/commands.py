@@ -31,16 +31,25 @@ def cmd_hash_object(args: argparse.Namespace) -> None:
         print(sha)
 
 
+def cmd_log(args: argparse.Namespace):
+    repo: Optional[GitRepository] = GitRepository.find()
+
+    print("digraph wyaglog{")
+    print("  node[shape=rect]")
+    repo.log_graphviz(repo.find(args.commit), set())
+    print("}")
+
+
 def get_cmd(key: Optional[str] = None) -> dict[str, COMMAND] | COMMAND:
     cmd_map: dict[str, COMMAND] = {
         "add": lambda: None,
-        "cat-file": lambda: None,
+        "cat-file": cmd_cat_file,
         "check-ignore": lambda: None,
         "checkout": lambda: None,
         "commit": lambda: None,
-        "hash-object": lambda: None,
+        "hash-object": cmd_hash_object,
         "init": cmd_init,
-        "log": lambda: None,
+        "log": cmd_log,
         "ls-files": lambda: None,
         "ls-tree": lambda: None,
         "rev-parse": lambda: None,

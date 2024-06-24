@@ -8,7 +8,7 @@ This repo will contain my implementation of the core git functionalities as outl
 * ❌ add
 * ❌ check-ignore
 * ❌ checkout
-* ❌ commit
+* ✅ commit
 * ❌ log
 * ❌ ls-files
 * ❌ ls-tree
