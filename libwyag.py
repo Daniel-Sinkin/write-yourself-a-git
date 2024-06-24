@@ -10,13 +10,11 @@ import sys
 import zlib
 from fnmatch import fnmatch
 from math import ceil
-from typing import Optional
+from typing import Callable, Optional, TypeAlias
 
 
 class GitRepository:
-    conf = None
-
-    def __init_(self, path: str, force: bool = False):
+    def __init__(self, path: str, force: bool = False):
         self.worktree: str = path
         self.gitdir: str = os.path.join(path, ".git")
 
@@ -88,7 +86,7 @@ def repo_create(path):
     assert repo.repo_dir("refs", "tags", mkdir=True) is not None
     assert repo.repo_dir("refs", "heads", mkdir=True) is not None
 
-    with open(repo.repo_file(repo, "description"), "w") as file:
+    with open(repo.repo_file("description"), "w") as file:
         file.write(
             "Unnamed repository; edit this file 'description' to name the repository.\n"
         )
@@ -100,33 +98,61 @@ def repo_create(path):
         repo_default_config().write(file)
 
 
-def get_cmd_map() -> dict[str]:
-    cmd_map: dict[str, any] = {
-        "add": cmd_add(args),
-        "cat-file": cmd_cat_file(args),
-        "check-ignore": cmd_check_ignore(args),
-        "checkout": cmd_checkout(args),
-        "commit": cmd_commit(args),
-        "hash-object": cmd_hash_object(args),
-        "init": cmd_init(args),
-        "log": cmd_log(args),
-        "ls-files": cmd_ls_files(args),
-        "ls-tree": cmd_ls_tree(args),
-        "rev-parse": cmd_rev_parse(args),
-        "rm": cmd_rm(args),
-        "show-ref": cmd_show_ref(args),
-        "status": cmd_status(args),
-        "tag": cmd_tag(args),
+def cmd_init(args: argparse.Namespace) -> None:
+    repo_create(args.path)
+
+
+COMMAND: TypeAlias = Callable[[argparse.Namespace], None]
+
+
+def get_cmd(key: Optional[str] = None) -> dict[str, COMMAND] | COMMAND:
+    cmd_map: dict[str, COMMAND] = {
+        "add": lambda: None,
+        "cat-file": lambda: None,
+        "check-ignore": lambda: None,
+        "checkout": lambda: None,
+        "commit": lambda: None,
+        "hash-object": lambda: None,
+        "init": cmd_init,
+        "log": lambda: None,
+        "ls-files": lambda: None,
+        "ls-tree": lambda: None,
+        "rev-parse": lambda: None,
+        "rm": lambda: None,
+        "show-ref": lambda: None,
+        "status": lambda: None,
+        "tag": lambda: None,
     }
+    if key is None:
+        return cmd_map
+    else:
+        return cmd_map[key]
 
 
 def parse_args(argv) -> argparse.Namespace:
     argparser = argparse.ArgumentParser(description="The stupidest content tracker")
     argsubparsers = argparser.add_subparsers(title="Commands", dest="command")
     argsubparsers.required = True
-    args = argparser.parse_args(argv)
+
+    argsp: argparse.ArgumentParser = argsubparsers.add_parser(
+        "init", help="Initialize a new, empty repository."
+    )
+
+    argsp.add_argument(
+        "path",
+        metavar="directory",
+        nargs="?",
+        default=".",
+        help="Where to create the repository.",
+    )
+
+    return argparser.parse_args(argv)
 
 
-def main(argv=sys.argv[1:]):
+def main():
     args = parse_args(sys.argv[1:])
-    cmd_map = get_cmd_map()
+    get_cmd(args.command)(args)
+
+
+if __name__ == "__main__":
+    main()
