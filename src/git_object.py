@@ -48,16 +48,27 @@ class GitObject(ABC):
         with open(path, "rb") as file:
             raw: bytes = zlib.decompress(file.read())
 
-            header_type_size_seperator = raw.find(b" ")
-            file_format: bytes = raw[0:header_type_size_seperator]
+        header_type_size_seperator: int = raw.find(b" ")
+        file_format: bytes = raw[0:header_type_size_seperator]
 
-            header_end: int = raw.find(b"\x00", header_type_size_seperator)
-            size = int(raw[header_type_size_seperator:header_end].decode("ascii"))
-            if size != len(raw) - header_end - 1:
-                raise Exception(f"Malformed object {sha}: bad length")
+        header_end: int = raw.find(b"\x00", header_type_size_seperator)
+        size = int(raw[header_type_size_seperator:header_end].decode("ascii"))
+        if size != len(raw) - header_end - 1:
+            raise Exception(f"Malformed object {sha}: bad length")
 
-            contents = raw[header_end + 1 :]
-            return fmt_to_class_map[file_format](contents)
+        contents: bytes = raw[header_end + 1 :]
+
+        match file_format:
+            case b"commit":
+                return (GitCommit(contents),)
+            case b"tree":
+                return (GitTree(contents),)
+            case b"tag":
+                return (GitTag(contents),)
+            case b"blob":
+                return (GitBlob(contents),)
+            case _:
+                raise Exception(f"Unsupported file format '{file_format=}'.")
 
     @staticmethod
     def write(object, repo: Optional[GitRepository] = None) -> str:
@@ -109,10 +120,10 @@ class GitTree(GitObject):
         return b"tree"
 
     def serialize(self) -> Optional[bytes]:
-        return self._blobdata
+        raise NotImplementedError
 
     def deserialize(self, data: Optional[bytes]):
-        self._blobdata: Optional[bytes] = data
+        raise NotImplementedError
 
 
 class GitCommit(GitObject):
@@ -142,10 +153,10 @@ class GitTag(GitObject):
         return b"tag"
 
     def serialize(self) -> Optional[bytes]:
-        return self._blobdata
+        raise NotImplementedError
 
     def deserialize(self, data: Optional[bytes]):
-        self._blobdata: Optional[str] = data
+        raise NotImplementedError
 
 
 fmt_to_class_map: dict[bytes, GitObject] = {

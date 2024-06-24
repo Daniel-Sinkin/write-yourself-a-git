@@ -1,13 +1,16 @@
 import argparse
 from argparse import ArgumentParser
-from typing import TypeAlias
+from typing import TypeAlias, cast
 
 SUBPARSER: TypeAlias = argparse._SubParsersAction
 
 
 def _parse_args_cat_file(argsubparsers: SUBPARSER) -> None:
-    argsp = argsubparsers.add_parser(
-        "cat-file", help="Provide content of repository objects"
+    argsp = cast(
+        ArgumentParser,
+        argsubparsers.add_parser(
+            "cat-file", help="Provide content of repository objects"
+        ),
     )
 
     argsp.add_argument(
@@ -21,8 +24,9 @@ def _parse_args_cat_file(argsubparsers: SUBPARSER) -> None:
 
 
 def _parse_args_init(argsubparsers: SUBPARSER) -> None:
-    argsp: ArgumentParser = argsubparsers.add_parser(
-        "init", help="Initialize a new, empty repository."
+    argsp = cast(
+        ArgumentParser,
+        argsubparsers.add_parser("init", help="Initialize a new, empty repository."),
     )
 
     argsp.add_argument(
@@ -35,9 +39,12 @@ def _parse_args_init(argsubparsers: SUBPARSER) -> None:
 
 
 def _parse_args_hash_object(argsubparsers: SUBPARSER) -> None:
-    argsp = argsubparsers.add_parser(
-        "hash-object",
-        help="Compute object ID and optionally creates a blob from a file",
+    argsp = cast(
+        ArgumentParser,
+        argsubparsers.add_parser(
+            "hash-object",
+            help="Compute object ID and optionally creates a blob from a file",
+        ),
     )
 
     argsp.add_argument(
@@ -60,8 +67,9 @@ def _parse_args_hash_object(argsubparsers: SUBPARSER) -> None:
 
 
 def _parse_args_commit(argsubparsers: SUBPARSER) -> None:
-    argsp: ArgumentParser = argsubparsers.add_parser(
-        "log", help="Display history of a given commit."
+    argsp: ArgumentParser = cast(
+        ArgumentParser,
+        argsubparsers.add_parser("log", help="Display history of a given commit."),
     )
     argsp.add_argument("commit", default="HEAD", nargs="?", help="Commit to start at.")
 
