@@ -1,12 +1,12 @@
-import argparse
 import sys
+from argparse import Namespace
 
+from src.argument_parsing import parse_args
 from src.commands import cmd_cat_file, cmd_hash_object, cmd_init, cmd_log
-from src.util import parse_args
 
 
 def main() -> None:
-    args: argparse.Namespace = parse_args(sys.argv[1:])
+    args: Namespace = parse_args(sys.argv[1:])
 
     match args.command:
         case "add":
