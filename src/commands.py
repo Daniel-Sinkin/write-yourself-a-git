@@ -1,11 +1,18 @@
 import argparse
-from typing import Callable, Optional, TypeAlias
+from typing import Callable, Optional, TypeAlias, cast
 
 from .git_repository import GitRepository
 
 
 def cmd_init(args: argparse.Namespace) -> None:
     GitRepository.create(args.path)
+
+
+def cmd_cat_file(args: argparse.Namespace) -> None:
+    repo = GitRepository.find()
+    type_ = str(args.type)
+    obj_str = str(args.object)
+    repo.cat_file(obj_str, fmt=type_.encode())
 
 
 COMMAND: TypeAlias = Callable[[argparse.Namespace], None]

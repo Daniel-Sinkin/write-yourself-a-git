@@ -35,7 +35,7 @@ class GitObject(ABC):
     def format(self) -> bytes: ...
 
     @staticmethod
-    def read(repo: GitRepository, sha) -> Optional[GitObject]:
+    def read(repo: GitRepository, sha: str) -> Optional[GitObject]:
         path: Optional[str] = repo.get_file("objects", sha[0:2], sha[2:])
 
         if path is None or not os.path.isfile(path):

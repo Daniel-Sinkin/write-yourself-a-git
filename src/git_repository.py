@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import configparser
 import os
+import sys
 from pathlib import Path
 from typing import Optional
+
+from .git_object import GitObject
 
 
 class GitRepository:
@@ -113,3 +116,12 @@ class GitRepository:
                 return None
 
         return GitRepository.find(parent, required)
+
+    def cat_file(self, object: str, fmt: Optional[bytes] = None) -> None:
+        object = GitObject.read(self, self.find_object(object, fmt=fmt))
+        sys.stdout.buffer.write(object.serialize())
+
+    def find_object(
+        self, name: str, fmt: Optional[bytes] = None, follow: bool = True
+    ) -> None:
+        return name
