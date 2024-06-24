@@ -3,12 +3,12 @@ This repo will contain my implementation of the core git functionalities as outl
 
 # TODOs
 * ✅ init
-* ❌ add
+* ❌ hash-object
 * ❌ cat-file
+* ❌ add
 * ❌ check-ignore
 * ❌ checkout
 * ❌ commit
-* ❌ hash-object
 * ❌ log
 * ❌ ls-files
 * ❌ ls-tree
