@@ -19,6 +19,9 @@ class GitObject(ABC):
         else:
             self.init()
 
+    def __str__(self):
+        return f'GitObject("{self.serialize()}")'
+
     @abstractmethod
     def serialize(repo) -> bytes: ...
 
@@ -45,11 +48,10 @@ class GitObject(ABC):
             file_format: bytes = raw[0:header_type_size_seperator]
 
             header_end: int = raw.find(b"\x00", header_type_size_seperator)
-            size = int(raw[0:header_type_size_seperator:header_end].decode("ascii"))
+            size = int(raw[header_type_size_seperator:header_end].decode("ascii"))
             if size != len(raw) - header_end - 1:
                 raise Exception(f"Malformed object {sha}: bad length")
 
-            contents = raw[header_end + 1 :]
             match file_format:
                 case b"commit":
                     object_type = GitCommit
@@ -57,13 +59,14 @@ class GitObject(ABC):
                     object_type = GitTree
                 case b"tag":
                     object_type = GitTag
-                case b"blog":
+                case b"blob":
                     object_type = GitBlob
                 case _:
                     raise Exception(
-                        f"Malformed object {sha}: Unknown type {format.decode('ascii')}"
+                        f"Malformed object {sha}: Unknown type {file_format.decode('ascii')}"
                     )
 
+            contents = raw[header_end + 1 :]
             return object_type(contents)
 
     def write(object: GitObject, repo: Optional[GitRepository] = None) -> str:
@@ -92,10 +95,14 @@ class GitObject(ABC):
 
 
 class GitBlob(GitObject):
-    def format() -> bytes:
+    def __str__(self):
+        return super().__str__().replace("GitObject", "GitBlob")
+
+    @property
+    def format(self) -> bytes:
         return b"blob"
 
-    def serialize(self) -> Optional[str]:
+    def serialize(self) -> Optional[bytes]:
         return self._blobdata
 
     def deserialize(self, data: Optional[str]):
