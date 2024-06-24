@@ -1,6 +1,5 @@
 import argparse
-from io import BufferedReader
-from typing import Callable, Optional, TypeAlias, cast
+from typing import Callable, Optional, TypeAlias
 
 from .git_object import GitBlob, GitCommit, GitObject, GitTag, GitTree
 from .git_repository import GitRepository
@@ -34,14 +33,14 @@ def object_hash(data: bytes, format: bytes, repo: Optional[GitRepository] = None
 
 
 def cmd_hash_object(args: argparse.Namespace) -> None:
-    repo = GitRepository.find() if args.write else None
+    repo: Optional[GitRepository] = GitRepository.find() if args.write else None
 
     with open(args.path, "rb") as file_data:
         sha = object_hash(file_data.read(), args.type.encode(), repo)
         print(sha)
 
 
-def cmd_log(args: argparse.Namespace):
+def cmd_log(args: argparse.Namespace) -> None:
     repo: Optional[GitRepository] = GitRepository.find()
 
     print("digraph wyaglog{")

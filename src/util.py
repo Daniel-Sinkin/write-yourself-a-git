@@ -5,7 +5,9 @@ from .constants import BYTE_CHARS
 
 
 # KVLM = Key-Value List with Message, as per https://wyag.thb.lt/#orgc8b86d2
-def kvlm_parse(raw: bytes, start: int = 0, dict_: Optional[OrderedDict] = None):
+def kvlm_parse(
+    raw: bytes, start: int = 0, dict_: Optional[OrderedDict] = None
+) -> OrderedDict:
     if dict_ is None:
         dict_ = OrderedDict()
 
