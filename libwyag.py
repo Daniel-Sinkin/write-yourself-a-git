@@ -10,6 +10,7 @@ import sys
 import zlib
 from fnmatch import fnmatch
 from math import ceil
+from pathlib import Path
 from typing import Callable, Optional, TypeAlias
 
 
@@ -22,9 +23,8 @@ class GitRepository:
             raise Exception(f"'{path}' is not a Git repo.")
 
         self.conf = configparser.ConfigParser()
-        cf = self.repo_file("config")
-
-        if cf and os.path.exists(cf):
+        cf: Optional[str] = self.repo_file("config")
+        if cf is not None and os.path.exists(cf):
             self.conf.read([cf])
         elif not force:
             raise Exception("Configuration file missing!")
@@ -34,16 +34,22 @@ class GitRepository:
             if version != 0:
                 raise Exception(f"Unsupported respoitoryformatversion {version}")
 
-    def repo_path(self, *path) -> str:
+    def __repr__(self):
+        return f"GitRepository(path='{self.worktree}')"
+
+    def __str__(self):
+        return self.__repr__()
+
+    def repo_path(self, *path: str | list[str]) -> str:
         return os.path.join(self.gitdir, *path)
 
-    def repo_file(self, *path, mkdir=False) -> Optional[str]:
+    def repo_file(self, *path: str | list[str], mkdir: bool = False) -> Optional[str]:
         if self.repo_dir(*path[:-1], mkdir=mkdir):
             return self.repo_path(*path)
         else:
             return None
 
-    def repo_dir(self, *path, mkdir=False) -> Optional[str]:
+    def repo_dir(self, *path: str | list[str], mkdir: bool = False) -> Optional[str]:
         path: str = self.repo_path(*path)
 
         if os.path.exists(path):
@@ -70,7 +76,7 @@ def repo_default_config():
     return retval
 
 
-def repo_create(path):
+def repo_create(path: str):
     repo = GitRepository(path, True)
 
     if os.path.exists(repo.worktree):
@@ -102,9 +108,27 @@ def cmd_init(args: argparse.Namespace) -> None:
     repo_create(args.path)
 
 
+def repo_find(path: str = ".", required: bool = True):
+    # Turns relative into absolute path
+    path = Path(path).resolve()
+
+    # Checks if there is a `.git` directory in path
+    if (path / ".git").is_dir():
+        return GitRepository(path)
+
+    parent = path.parent
+    if parent == path:
+        # Base case, the path is a (the?) root
+        if required:
+            raise Exception("No git directory")
+        else:
+            return None
+
+    return repo_find(parent, required)
+
+
+# fmt: off
 COMMAND: TypeAlias = Callable[[argparse.Namespace], None]
-
-
 def get_cmd(key: Optional[str] = None) -> dict[str, COMMAND] | COMMAND:
     cmd_map: dict[str, COMMAND] = {
         "add": lambda: None,
@@ -127,6 +151,7 @@ def get_cmd(key: Optional[str] = None) -> dict[str, COMMAND] | COMMAND:
         return cmd_map
     else:
         return cmd_map[key]
+# fmt: on
 
 
 def parse_args(argv) -> argparse.Namespace:
@@ -155,4 +180,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    print(repo_find("./a/b"))
+    # main()
