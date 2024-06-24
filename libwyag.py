@@ -2,6 +2,7 @@ import argparse
 import sys
 
 from src.commands import get_cmd
+from src.git_object import GitBlob
 from src.util import parse_args
 
 
