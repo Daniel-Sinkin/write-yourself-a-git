@@ -135,7 +135,6 @@ class GitRepository:
         assert commit is None or isinstance(commit, GitCommit)
         assert commit.format == b"commit"
 
-        short_hash = sha[0:8]
         message = commit.kvlm[None].decode("utf8").strip()
         message = message.replace("\\", "\\\\")
         message = message.replace('"', '\\"')

@@ -27,10 +27,10 @@ class GitObject(ABC):
         return f'GitObject("{self.serialize()}")'
 
     @abstractmethod
-    def serialize(repo) -> bytes: ...
+    def serialize(self) -> bytes: ...
 
     @abstractmethod
-    def deserialize(repo): ...
+    def deserialize(self): ...
 
     def init(self): ...
 
@@ -59,7 +59,8 @@ class GitObject(ABC):
             contents = raw[header_end + 1 :]
             return fmt_to_class_map[file_format](contents)
 
-    def write(object: GitObject, repo: Optional[GitRepository] = None) -> str:
+    @staticmethod
+    def write(object, repo: Optional[GitRepository] = None) -> str:
         data: bytes = object.serialize()
 
         result: bytes = (
