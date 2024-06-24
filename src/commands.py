@@ -36,7 +36,7 @@ def cmd_log(args: argparse.Namespace):
 
     print("digraph wyaglog{")
     print("  node[shape=rect]")
-    repo.log_graphviz(repo.find(args.commit), set())
+    repo.log_graphviz(repo.get_file(args.commit), set())
     print("}")
 
 
